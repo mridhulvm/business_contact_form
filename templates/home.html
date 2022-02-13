@@ -10,13 +10,15 @@
       </div>
       <div class="mb-3">
         <label for="pwd">Contact:</label>
-        <input type="name" class="form-control"  placeholder="Enter contact address" name="contact">
+        <input id='contact' onkeyup="contact_notnull()" type="name" class="form-control"  placeholder="Enter contact address" name="contact">
+        <div style="color:red" id="contact_error" class="form-text"></div>
+
       </div>
       <div class="mb-3">
         <label for="businessSelect" class="form-label">Select Business</label>
         <select id="businessSelect" class="form-select">
             {% for business in business_list %}
-            <option>{{ business.name }}</option>
+            <option value = {{business.id}}>{{ business.name }}</option>
               {% endfor %}  
         </select>
  
@@ -24,64 +26,176 @@
   
       <div class="mb-3">
         <label for="pwd">Phone Number:</label>
-        <div class="row">
             <input onkeyup="phone_validate()" id="phone_number" type="integer" class="form-control" placeholder="Enter contact address" name="phone">
-        </div>
         <div style="color:red" id="phone_number_error" class="form-text"></div>
 
       </div>
-      <div style="color:red" id="display_error" class="form-text"></div>
+      <div class="row">
+        <button id="submit" type="submit" class="btn btn-primary">Submit</button>
+        <div style="color:red" id="display_error" class="form-text"></div>
+      </div>
 
-      <button id="submit" type="submit" class="btn btn-primary">Submit</button>
+
   </div>
   <script>
-    $('#submit').click(function(){
 
+    var eventlistener = document.getElementById('submit')
+    eventlistener.addEventListener('click', function(){
 
-             
+        var business = document.getElementById('businessSelect').value
+        var contact = document.getElementById('contact').value
+        var name =document.getElementById('name').value
+        var phone_number=document.getElementById('phone_number').value
+
+        console.log(name,contact,business,phone_number)
+
+        var name_check = false
+        var phone_number_check = false  
+        var contact_check = false
+
+// ========contact field validation ====
+
+            if (contact.value == ''){                 
+                document.getElementById('contact_error').innerHTML="contact cannot be empty"
+                contact_check=false
+            }
+            else{
+                document.getElementById('contact_error').innerHTML=""
+                contact_check=true
+            }
+
+//========name field validation ====
+
+        var name_regex=/^[a-zA-Z ]{1,30}$/;
+            
+            if (name_regex.test(name)){
+                document.getElementById('name_error').innerHTML=""
+                name_check=true
+
+            }
+            else{
+                document.getElementById('name_error').innerHTML="not valid name"
+                name_check=false
+
+            }
+
+//========phone number field validation ====            
+        
+        var phone_regex=/^\d{10}$/
+
+        var phone_number_check_alphabet=document.getElementById('phone_number').value
+
+        lastIndex = phone_number_check_alphabet.length;
+        phone_number_check_alphabet = phone_number_check_alphabet[lastIndex - 1] 
+
+        if(name_regex.test(phone_number_check_alphabet)){
+
+        document.getElementById('phone_number_error').innerHTML="Phone number only allows digits"
+        phone_number_check=false
+
+        }              
+        else if (phone_regex.test(phone_number)){
+            document.getElementById('phone_number_error').innerHTML=""
+            phone_number_check=true
+
+        }        
+
+        else if(phone_number.length<10){
+
+            document.getElementById('phone_number_error').innerHTML="Phone number less than 10 is not valid"
+            phone_number_check=false
+
+        }
+        else if(phone_number.length>10){
+            document.getElementById('phone_number_error').innerHTML="Phone number greater than 10 is not valid"
+            phone_number_check=false
+        }
+        else{
+            document.getElementById('phone_number_error').innerHTML="enter valid phone number"
+        }
+              
 //===============================================================ajax start
-if( email_check== true && password_check == true && first_name_input == true && last_name_input == true && phone_number_input == true && confirm_password_check ==true)
+if( name_check == true && phone_number_check == true && contact_check == true)
     {
-        $.ajax({
+        document.getElementById('display_error').innerHTML=" "
 
+        console.log("form submitted successfully")
+
+        $.ajax({
+            url:"{% url 'input_form:submit_form' %}",
+            method: 'post',
+            data: {'name':name,'contact':contact,'business':business,'phone_number':phone_number,'csrfmiddlewaretoken': '{{ csrf_token }}'},
+            dataType: 'json',
+            success: function (data) {
+
+            console.log(data)
+            if(data.status){         
+
+                $('#display_error').html() ;
+                alert(data.message) ;   
+                           
+            }else{
+                $('#display_error').html(data.message) ;   
+            }
+
+            },
+            error: function(error){
+              console.log("Ajax cant send data")
+            }
         })//ajax end
-     
     }
     else{
+        console.log("form submitted validation error")
         document.getElementById('display_error').innerHTML="Enter Valid Credentials"
 
     }
-})
+});
 ///click function ended=====================================
-// form validation====================================
-      
-            var name_input = false
-            var phone_number_input = false
 
-            
+// onkeyup form validation====================================
+      
+            var name_check = false
+            var phone_number_check = false
+            var contact_check = false
+
+// ========contact field validation ====
+
+            function contact_notnull(){
+                var contact = document.getElementById('contact')
+                if (contact.value == ''){                 
+                    document.getElementById('contact_error').innerHTML="contact cannot be empty"
+                    contact_check=false
+                }
+                else{
+                    document.getElementById('contact_error').innerHTML=""
+                    contact_check=true
+                }
+           
+
+            }
+
+// ========name field validation ====
 
             function name_validate(){
 
                 var name_regex=/^[a-zA-Z ]{1,30}$/;
                 
-                var name_from_input =document.getElementById('name').value
-                if (name_regex.test(name_from_input)){
+                var name =document.getElementById('name').value
+                if (name_regex.test(name)){
                     document.getElementById('name_error').innerHTML=""
-                    name_input=true
-                    console.log("name",name_input)
+                    name_check=true
 
                 }
                 else{
                     document.getElementById('name_error').innerHTML="not valid name"
-                    name_input=false
-                    console.log("name",name_input)
+                    name_check=false
 
                 }
 
             }
             
+// ========phone number field validation ====
 
-           
       function phone_validate(){
             var phone_number=document.getElementById('phone_number').value
             var phone_regex=/^\d{10}$/
@@ -94,34 +208,32 @@ if( email_check== true && password_check == true && first_name_input == true && 
             if(name_regex.test(phone_number_check_alphabet)){
 
             document.getElementById('phone_number_error').innerHTML="Phone number only allows digits"
-            phone_number_input=false
+            phone_number_check=false
 
             }              
             else if (phone_regex.test(phone_number)){
                 document.getElementById('phone_number_error').innerHTML=""
-                phone_number_input=true
+                phone_number_check=true
 
             }        
  
             else if(phone_number.length<10){
 
                 document.getElementById('phone_number_error').innerHTML="Phone number less than 10 is not valid"
-                phone_number_input=false
+                phone_number_check=false
 
             }
             else if(phone_number.length>10){
                 document.getElementById('phone_number_error').innerHTML="Phone number greater than 10 is not valid"
-                phone_number_input=false
+                phone_number_check=false
             }
             else{
                 document.getElementById('phone_number_error').innerHTML="enter valid phone number"
             }
         }
 
-      
-
-
-       
-                           
+                               
     </script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
   {% endblock content %}

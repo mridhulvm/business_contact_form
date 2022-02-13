@@ -20,8 +20,7 @@ class InputForm(date):
     name = models.CharField(max_length=255,null = False, blank = False)
     contact  = models.CharField(max_length=255,null = False, blank = False)
     business_type = models.ForeignKey(BusinessType,on_delete=models.CASCADE)
-    contact_number  = models.IntegerField(null = False, blank = False)
-    International_code = models.IntegerField(null = False, blank = False)
+    phone_number  = models.IntegerField(null = False, blank = False)
 
     def __str__(self):
         return self.name+" "+str(self.created_at)
